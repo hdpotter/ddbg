@@ -4,15 +4,15 @@ using System.Collections.Generic;
 public class MatchType
 {
 	public IEnumerable<Deck> Kingdom => _kingdom;
-	public IEnumerable<CardType> StartingHand => _startingHand;
+	public IEnumerable<CardType> StartingDeck => _startingDeck;
 
 	List<Deck> _kingdom;
-	List<CardType> _startingHand;
+	List<CardType> _startingDeck;
 
-	public MatchType(IEnumerable<Deck> kingdom, IEnumerable<CardType> startingHand)
+	public MatchType(IEnumerable<Deck> kingdom, IEnumerable<CardType> startingDeck)
 	{
 		_kingdom = new List<Deck>(kingdom);
-		_startingHand = new List<CardType>(startingHand);
+		_startingDeck = new List<CardType>(startingDeck);
 	}
 
 }

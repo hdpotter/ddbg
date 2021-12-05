@@ -16,6 +16,7 @@ class Program
 
     	while(!match.NextRound())
     	{
+            Console.WriteLine("completed round " + match.CurrentRound);
     	}
 
     	Console.WriteLine("game terminated after " + match.CurrentRound + " rounds");

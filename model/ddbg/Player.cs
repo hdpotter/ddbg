@@ -65,9 +65,9 @@ public class Player
 	{
 		_phase = PlayerPhase.ACTION;
 
-		_actions = 0;
+		_actions = 1;
 		_coins = 0;
-		_buys = 0;
+		_buys = 1;
 	}
 
 	public void PlayAction(Card card)

@@ -25,7 +25,6 @@ public class BigMoneyAgent : Agent
 
 	public BigMoneyAgent() : base()
 	{
-		SetupDecks();
 	}
 
 	public void SetupDecks()
@@ -64,17 +63,35 @@ public class BigMoneyAgent : Agent
 
 	public override void TakeTurn()
 	{
+		if(_decks == null)
+		{
+			SetupDecks();
+		}
+
 		// end action phase
 		_player.EndActions();
 
 		// play treasures
-		foreach (Card card in _player.Hand.Cards)
+		bool treasureFound = true;
+		while(treasureFound)
 		{
-			if (card.Type.IsTreasure)
+			treasureFound = false;
+			Card treasure = null;
+			foreach (Card card in _player.Hand.Cards)
 			{
-				_player.PlayTreasure(card);
+				if (card.Type.IsTreasure)
+				{
+					treasureFound = true;
+					treasure = card;
+					break;
+				}
 			}
+			if(treasureFound)
+            {
+				_player.PlayTreasure(treasure);
+            }
 		}
+
 		_player.EndTreasures();
 
 		// buy cards
@@ -85,6 +102,7 @@ public class BigMoneyAgent : Agent
 				if (deck.Top.Type.Cost <= _player.Coins)
 				{
 					_player.BuyCard(deck);
+					break;
 				}
 			}
 		}

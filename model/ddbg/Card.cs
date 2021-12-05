@@ -12,4 +12,9 @@ public class Card
 	{
 		_type = type;
 	}
+
+	public override string ToString()
+	{
+		return _type.Name;
+	}
 }

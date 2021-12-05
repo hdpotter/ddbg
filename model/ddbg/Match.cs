@@ -7,13 +7,17 @@ public class Match
 	public int Winner => _winner;
 
 	// redo with CachedReadOnly
-	List<Deck> Kingdom => _kingdom;
+	public List<Deck> Kingdom => _kingdom;
 
 	Player _firstPlayer;
 	Player _secondPlayer;
+	Agent _firstAgent;
+	Agent _secondAgent;
+
 	List<Deck> _kingdom;
 
 	int _winner = -1;
+	Player _lastPlayer;
 
 	public Match(Agent firstAgent, Agent secondAgent, MatchType matchType, Random random)
 	{
@@ -23,18 +27,67 @@ public class Match
 
 		_firstPlayer.Setup(matchType.StartingDeck);
 		_secondPlayer.Setup(matchType.StartingDeck);
+		_lastPlayer = _secondPlayer;
+
+		_firstAgent = new BigMoneyAgent(this, _firstPlayer);
+		_secondAgent = new BigMoneyAgent(this, _secondPlayer);
 	}
 
-	void PlayerTurn(Player player, Agent agent)
+	// returns true if the match is over
+	public bool NextTurn()
 	{
-		player.StartTurn();
-
-		while(player.Phase != PlayerPhase.OFFTURN)
+		if(_winner < 0)
 		{
-			agent.MakeMove(this);
+			throw new Exception("attempted to take turn, but game is over");
 		}
 
-		CheckForGameEnd();
+		Agent agent = _lastPlayer == _secondPlayer ? _firstAgent : _secondAgent;
+
+		agent.Player.StartTurn();
+		agent.TakeTurn(); //todo: split this into separate actions taken via a limited interface
+
+		if(agent.Player.Phase != PlayerPhase.OFFTURN)
+		{
+			throw new Exception("agent did not end turn");
+		}
+
+		if(CheckForGameEnd())
+		{
+			CalculateWinner();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	void CalculateWinner()
+	{
+		if(VictoryPointsInDeck(_firstPlayer) > VictoryPointsInDeck(_secondPlayer))
+		{
+			_winner = 1;
+		}
+		else
+		{
+			_winner = 2;
+		}
+	}
+
+	int VictoryPointsInDeck(Player player)
+	{
+		int victoryPoints = 0;
+		foreach(Card card in player.Draw.Cards)
+		{
+			victoryPoints += card.Type.VictoryPoints;
+		}
+
+		foreach(Card card in player.Discard.Cards)
+		{
+			victoryPoints += card.Type.VictoryPoints;
+		}
+
+		return victoryPoints;
 	}
 
 	bool CheckForGameEnd()

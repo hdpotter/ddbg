@@ -4,73 +4,102 @@ using System.Collections.Generic;
 
 public class Match
 {
-	public int Winner => _winner;
+	// todo: redo with CachedReadOnly
+    public List<int> Winners => _winners;
+	public int CurrentRound => _currentRound;
 
-	// redo with CachedReadOnly
+	// todo: redo with CachedReadOnly
 	public List<Deck> Kingdom => _kingdom;
 
-	Player _firstPlayer;
-	Player _secondPlayer;
-	Agent _firstAgent;
-	Agent _secondAgent;
-
+	List<Agent> _agents;
 	List<Deck> _kingdom;
 
-	int _winner = -1;
-	Player _lastPlayer;
+	List<int> _winners;
+	int _currentRound = 0;
 
 	public Match(Agent firstAgent, Agent secondAgent, MatchType matchType, Random random)
 	{
-		_firstPlayer = new Player(random);
-		_secondPlayer = new Player(random);
+		_agents = new List<Agent>();
+		_agents.Add(firstAgent);
+		_agents.Add(secondAgent);
+
+		foreach(Agent agent in _agents)
+		{
+			agent.Setup(this, new Player(random));
+			agent.Player.Setup(matchType.StartingDeck);
+		}
+
 		_kingdom = new List<Deck>(matchType.Kingdom);
-
-		_firstPlayer.Setup(matchType.StartingDeck);
-		_secondPlayer.Setup(matchType.StartingDeck);
-		_lastPlayer = _secondPlayer;
-
-		_firstAgent = new BigMoneyAgent(this, _firstPlayer);
-		_secondAgent = new BigMoneyAgent(this, _secondPlayer);
 	}
 
 	// returns true if the match is over
-	public bool NextTurn()
+	public bool NextRound()
 	{
-		if(_winner < 0)
+		if(_winners != null)
 		{
 			throw new Exception("attempted to take turn, but game is over");
 		}
 
-		Agent agent = _lastPlayer == _secondPlayer ? _firstAgent : _secondAgent;
-
-		agent.Player.StartTurn();
-		agent.TakeTurn(); //todo: split this into separate actions taken via a limited interface
-
-		if(agent.Player.Phase != PlayerPhase.OFFTURN)
+		for(int i = 0; i < _agents.Count; i++)
 		{
-			throw new Exception("agent did not end turn");
+			_agents[i].Player.StartTurn();
+			_agents[i].TakeTurn();
+
+			if(_agents[i].Player.Phase != PlayerPhase.OFFTURN)
+			{
+				throw new Exception("agent did not end turn");
+			}
+		
+			if(CheckForGameEnd())
+			{
+				CalculateWinner(i);
+				return true;
+			}
 		}
 
-		if(CheckForGameEnd())
-		{
-			CalculateWinner();
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		_currentRound++;
+		return false;
 	}
 
-	void CalculateWinner()
+	// lastToPlay is the index of the player after whose turn the game ended
+    void CalculateWinner(int lastToPlay)
 	{
-		if(VictoryPointsInDeck(_firstPlayer) > VictoryPointsInDeck(_secondPlayer))
+		// find the list of players tied for most points
+		int mostPoints = int.MinValue;
+		List<int> contenders = new List<int>();
+
+		for(int i = 0; i < _agents.Count; i++)
 		{
-			_winner = 1;
+			int points = VictoryPointsInDeck(_agents[i].Player);
+			if(points == mostPoints)
+			{
+				contenders.Add(i);
+			}
+			else if(points > mostPoints)
+			{
+				mostPoints = points;
+				contenders.Clear();
+				contenders.Add(i);
+			}
 		}
-		else
+
+		// find the list of players tied for fewest turns
+		int minTurns = int.MaxValue;
+		_winners = new List<int>();
+
+		foreach(int contender in contenders)
 		{
-			_winner = 2;
+			int turns = _currentRound + (lastToPlay >= contender ? 1 : 0);
+
+			if(turns == minTurns)
+			{
+				_winners.Add(contender);
+			}
+			else if(turns < minTurns)
+			{
+				_winners.Clear();
+				_winners.Add(contender);
+			}
 		}
 	}
 

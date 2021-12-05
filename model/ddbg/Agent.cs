@@ -9,8 +9,9 @@ public abstract class Agent
 	protected Match _match;
 	protected Player _player;
 
-	public Agent(Match match, Player player)
+	public void Setup(Match match, Player player)
 	{
+		_match = match;
 		_player = player;
 	}
 
@@ -20,15 +21,14 @@ public abstract class Agent
 
 public class BigMoneyAgent : Agent
 {
-
 	List<Deck> _decks;
 
-	public BigMoneyAgent(Match match, Player player) : base(match, player)
+	public BigMoneyAgent() : base()
 	{
-		Setup();
+		SetupDecks();
 	}
 
-	public void Setup()
+	public void SetupDecks()
 	{
 		Deck copper = null;
 		Deck silver = null;

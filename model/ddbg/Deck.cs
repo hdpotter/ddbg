@@ -6,6 +6,7 @@ public class Deck
 {
 	// todo: remake this with CachedReadOnly
 	public List<Card> Cards => _cards;
+	public Card Top => _cards.Count > 0 ? _cards[_cards.Count - 1] : null;
 
 	List<Card> _cards;
 	Random _random;
@@ -29,15 +30,21 @@ public class Deck
 		}
 	}
 
-	public void AddCard(Card card)
+	// todo: consider having deck extend List<Card>
+    public void Add(Card card)
 	{
 		_cards.Add(card);
 	}
 
-	public void RemoveCard(Card card)
+	public void Remove(Card card)
 	{
 		_cards.Remove(card);
 	}
+
+	public bool Contains(Card card)
+    {
+		return _cards.Contains(card);
+    }
 
 	public void SendAllTo(Deck target)
 	{
